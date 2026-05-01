@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Result Table</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 20px;
+            background-color: #f8f9fa;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #2c3e50;
+            color: white;
+        }
+        .btn {
+            padding: 6px 12px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            margin: 0 4px;
+            font-weight: bold;
+            transition: opacity 0.3s;
+        }
+        .btn:hover { opacity: 0.8; }
+        .btn-edit { background-color: #3498db; }
+        .btn-delete { background-color: #e74c3c; }
+        
+        /* Background classes based on percentage */
+        .bg-green { background-color: #d4edda; }   /* 85–100% */
+        .bg-yellow { background-color: #fff3cd; }  /* 65–84% */
+        .bg-orange { background-color: #ffe8cc; }  /* 55–64% */
+        .bg-red { background-color: #f8d7da; }     /* <=54% */
+        
+        /* Search Form Styles */
+        .search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .search-container input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+        .result-card {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            text-align: left;
+            display: inline-block;
+            min-width: 300px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .error-text { color: #e74c3c; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h2>Student Performance Dashboard</h2>
+
+    <!-- Search Section -->
+    <div class="search-container">
+        <h3>Search Student Result</h3>
+        <input type="text" id="searchName" placeholder="Enter Student Name">
+        <input type="text" id="searchRollNo" placeholder="Enter Roll Number">
+        <button class="btn" style="background-color: #2ecc71;" onclick="searchStudent()">Search Result</button>
+        <button class="btn" style="background-color: #95a5a6;" onclick="clearSearch()">Clear</button>
+        
+        <br>
+        <div id="searchResultCard" class="result-card" style="display: none;"></div>
+    </div>
+
+    <h2 style="margin-top: 40px;">All Students Data</h2>
+    <table id="resultTable">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Roll No</th>
+                <th>CNN</th>
+                <th>CPP</th>
+                <th>ADE</th>
+                <th>DSA</th>
+                <th>Total Marks</th>
+                <th>Percentage</th>
+                <th>Grade</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- Rows will be populated here via JavaScript -->
+        </tbody>
+    </table>
+
+    <h3 id="passPercentageDisplay" style="text-align: center; margin-top: 20px; color: #333;"></h3>
+
+    <script>
+        // Array storing 21 student records
+        let students = [
+            { name: 'Ravi', rollNo: 'HU2025', marks: { CNN: 50, CPP: 78, ADE: 80, DSA: 69 } },
+            { name: 'Amit', rollNo: 'HU2026', marks: { CNN: 85, CPP: 90, ADE: 88, DSA: 92 } },
+            { name: 'Priya', rollNo: 'HU2027', marks: { CNN: 60, CPP: 65, ADE: 70, DSA: 75 } },
+            { name: 'Neha', rollNo: 'HU2028', marks: { CNN: 40, CPP: 45, ADE: 50, DSA: 55 } },
+            { name: 'Rahul', rollNo: 'HU2029', marks: { CNN: 75, CPP: 80, ADE: 72, DSA: 78 } },
+            { name: 'Kiran', rollNo: 'HU2030', marks: { CNN: 95, CPP: 92, ADE: 96, DSA: 90 } },
+            { name: 'Pooja', rollNo: 'HU2031', marks: { CNN: 55, CPP: 58, ADE: 60, DSA: 62 } },
+            { name: 'Vikas', rollNo: 'HU2032', marks: { CNN: 30, CPP: 35, ADE: 40, DSA: 45 } },
+            { name: 'Sneha', rollNo: 'HU2033', marks: { CNN: 88, CPP: 85, ADE: 90, DSA: 87 } },
+            { name: 'Sanjay', rollNo: 'HU2034', marks: { CNN: 68, CPP: 70, ADE: 75, DSA: 72 } },
+            { name: 'Anita', rollNo: 'HU2035', marks: { CNN: 50, CPP: 52, ADE: 55, DSA: 58 } },
+            { name: 'Raj', rollNo: 'HU2036', marks: { CNN: 45, CPP: 48, ADE: 50, DSA: 52 } },
+            { name: 'Suman', rollNo: 'HU2037', marks: { CNN: 92, CPP: 95, ADE: 98, DSA: 94 } },
+            { name: 'Kunal', rollNo: 'HU2038', marks: { CNN: 78, CPP: 82, ADE: 85, DSA: 80 } },
+            { name: 'Divya', rollNo: 'HU2039', marks: { CNN: 62, CPP: 65, ADE: 68, DSA: 70 } },
+            { name: 'Arun', rollNo: 'HU2040', marks: { CNN: 35, CPP: 40, ADE: 42, DSA: 48 } },
+            { name: 'Meena', rollNo: 'HU2041', marks: { CNN: 80, CPP: 85, ADE: 82, DSA: 88 } },
+            { name: 'Deepak', rollNo: 'HU2042', marks: { CNN: 70, CPP: 75, ADE: 78, DSA: 74 } },
+            { name: 'Tara', rollNo: 'HU2043', marks: { CNN: 58, CPP: 60, ADE: 62, DSA: 65 } },
+            { name: 'Gaurav', rollNo: 'HU2044', marks: { CNN: 42, CPP: 45, ADE: 48, DSA: 50 } },
+            { name: 'Mona', rollNo: 'HU2045', marks: { CNN: 89, CPP: 91, ADE: 94, DSA: 88 } }
+        ];
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = ''; // Clear existing rows
+
+            // Sort students by total marks in descending order to determine rank
+            students.sort((a, b) => {
+                const totalA = a.marks.CNN + a.marks.CPP + a.marks.ADE + a.marks.DSA;
+                const totalB = b.marks.CNN + b.marks.CPP + b.marks.ADE + b.marks.DSA;
+                return totalB - totalA;
+            });
+
+            let passingStudentsCount = 0;
+
+            students.forEach((student, index) => {
+                // Calculate Total & Percentage
+                const total = student.marks.CNN + student.marks.CPP + student.marks.ADE + student.marks.DSA;
+                const percentage = (total / 400) * 100;
+
+                // Count passing students (percentage >= 55)
+                if (percentage >= 55) {
+                    passingStudentsCount++;
+                }
+
+                // Determine Row Background Color & Grade
+                let bgClass = '';
+                let grade = '';
+                if (percentage >= 85) {
+                    bgClass = 'bg-green';
+                    grade = 'A';
+                } else if (percentage >= 65) {
+                    bgClass = 'bg-yellow';
+                    grade = 'B';
+                } else if (percentage >= 55) {
+                    bgClass = 'bg-orange';
+                    grade = 'C';
+                } else {
+                    bgClass = 'bg-red';
+                    grade = 'F';
+                }
+
+                const row = document.createElement('tr');
+                row.className = bgClass;
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${student.name}</td>
+                    <td>${student.rollNo}</td>
+                    <td>${student.marks.CNN}</td>
+                    <td>${student.marks.CPP}</td>
+                    <td>${student.marks.ADE}</td>
+                    <td>${student.marks.DSA}</td>
+                    <td><strong>${total}</strong></td>
+                    <td><strong>${percentage.toFixed(2)}%</strong></td>
+                    <td><strong>${grade}</strong></td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editStudent(${index})">Edit</button>
+                        <button class="btn btn-delete" onclick="deleteStudent(${index})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Calculate and display the overall pass percentage
+            const totalStudents = students.length;
+            const overallPassPercentage = totalStudents > 0 ? (passingStudentsCount / totalStudents) * 100 : 0;
+            document.getElementById('passPercentageDisplay').innerHTML = `Total Pass Percentage: <strong style="color: #2c3e50;">${overallPassPercentage.toFixed(2)}%</strong>`;
+        }
+
+        function deleteStudent(index) {
+            if(confirm('Are you sure you want to delete this record?')) {
+                students.splice(index, 1);
+                renderTable(); // Re-render table after deletion
+            }
+        }
+
+        function editStudent(index) {
+            const student = students[index];
+            
+            const newName = prompt("Enter new name:", student.name);
+            if (newName !== null && newName.trim() !== "") {
+                student.name = newName.trim();
+            }
+
+            const subjects = ['CNN', 'CPP', 'ADE', 'DSA'];
+            for (let sub of subjects) {
+                const newMark = prompt(`Enter new marks for ${sub} (0-100):`, student.marks[sub]);
+                if (newMark !== null && !isNaN(newMark) && newMark.trim() !== "") {
+                    // Constrain the marks between 0 and 100
+                    let parsedMark = Number(newMark);
+                    if(parsedMark >= 0 && parsedMark <= 100) {
+                        student.marks[sub] = parsedMark;
+                    } else {
+                        alert(`Invalid mark for ${sub}. Must be between 0 and 100.`);
+                    }
+                }
+            }
+            
+            renderTable(); // Re-render table to reflect edits
+        }
+
+        function searchStudent() {
+            const nameInput = document.getElementById('searchName').value.trim().toLowerCase();
+            const rollInput = document.getElementById('searchRollNo').value.trim().toLowerCase();
+            const resultCard = document.getElementById('searchResultCard');
+
+            if (!nameInput || !rollInput) {
+                resultCard.style.display = 'inline-block';
+                resultCard.className = 'result-card bg-red';
+                resultCard.innerHTML = `<p class="error-text">Please enter both Name and Roll Number.</p>`;
+                return;
+            }
+
+            const student = students.find(s => 
+                s.name.toLowerCase() === nameInput && 
+                s.rollNo.toLowerCase() === rollInput
+            );
+
+            if (student) {
+                const total = student.marks.CNN + student.marks.CPP + student.marks.ADE + student.marks.DSA;
+                const percentage = (total / 400) * 100;
+                
+                let grade = '';
+                let bgClass = '';
+                if (percentage >= 85) { grade = 'A'; bgClass = 'bg-green'; }
+                else if (percentage >= 65) { grade = 'B'; bgClass = 'bg-yellow'; }
+                else if (percentage >= 55) { grade = 'C'; bgClass = 'bg-orange'; }
+                else { grade = 'F'; bgClass = 'bg-red'; }
+
+                resultCard.style.display = 'inline-block';
+                resultCard.className = `result-card ${bgClass}`;
+                resultCard.innerHTML = `
+                    <h4 style="margin-top: 0; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Result Found</h4>
+                    <p><strong>Name:</strong> ${student.name} &nbsp; | &nbsp; <strong>Roll No:</strong> ${student.rollNo}</p>
+                    <p><strong>CNN:</strong> ${student.marks.CNN} &nbsp; | &nbsp; <strong>CPP:</strong> ${student.marks.CPP} &nbsp; | &nbsp; <strong>ADE:</strong> ${student.marks.ADE} &nbsp; | &nbsp; <strong>DSA:</strong> ${student.marks.DSA}</p>
+                    <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+                    <p style="font-size: 18px;"><strong>Total Marks:</strong> ${total} / 400</p>
+                    <p style="font-size: 18px;"><strong>Percentage:</strong> ${percentage.toFixed(2)}% &nbsp; | &nbsp; <strong>Grade:</strong> ${grade}</p>
+                `;
+            } else {
+                resultCard.style.display = 'inline-block';
+                resultCard.className = 'result-card bg-orange';
+                resultCard.innerHTML = `<p class="error-text" style="margin: 0;">No student found matching Name "${nameInput}" and Roll No "${rollInput}".</p>`;
+            }
+        }
+
+        function clearSearch() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchRollNo').value = '';
+            document.getElementById('searchResultCard').style.display = 'none';
+        }
+
+        // Initial render when the page loads
+        renderTable();
+    </script>
+</body>
+</html>
